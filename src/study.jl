@@ -369,18 +369,20 @@ function directions(study::Study)
 end
 
 """
-    best_trials(study::Study) -> Vector
+    best_trials(study::Study) -> Vector{Trial}
 
-Return all Pareto-optimal trials (the Pareto front) of a multi-objective study.
-Each element is a Python `FrozenTrial`; fields `.values`, `.params`, and `.number`
-are accessible via PythonCall. For single-objective studies this wraps the single
-best trial in a vector.
+Return all Pareto-optimal trials (the Pareto front) of a multi-objective study, each
+wrapped as a [Trial](@ref). For single-objective studies this wraps the
+single best trial in a vector.
 
 ## Arguments
 - `study::Study`: The study to query. (see [Study](@ref))
+
+## Returns
+- `Vector{Trial}`: The Pareto-optimal trials.
 """
 function best_trials(study::Study)
-    return pyconvert(Vector, study.study.best_trials)
+    return [Trial{false}(t) for t in study.study.best_trials]
 end
 
 """
@@ -446,9 +448,10 @@ end
         study::Study;
         copy_trials::Bool=true,
         states::Union{Nothing,AbstractVector{<:AbstractString}}=nothing,
-    ) -> Vector
+    ) -> Vector{Trial}
 
-Return all trials in the study, ordered by trial number.
+Return all trials in the study, ordered by trial number, each wrapped as a
+[Trial](@ref)..
 For further information see the [get_trials](https://optuna.readthedocs.io/en/stable/reference/generated/optuna.study.Study.html#optuna.study.Study.get_trials) in the Optuna python documentation.
 
 ## Arguments
@@ -459,7 +462,7 @@ For further information see the [get_trials](https://optuna.readthedocs.io/en/st
 - `states::Union{Nothing,AbstractVector{<:AbstractString}}=nothing`: Trial states to filter on, e.g. `["complete", "pruned"]`. Valid values are `"running"`, `"waiting"`, `"complete"`, `"pruned"`, and `"fail"`. If `nothing`, trials of all states are included.
 
 ## Returns
-- `Vector`: Trials of the study matching `states` (or all trials if `states` is `nothing`).
+- `Vector{Trial}`: Trials of the study matching `states` (or all trials if `states` is `nothing`).
 """
 function get_trials(
     study::Study;
@@ -478,5 +481,5 @@ function get_trials(
         pylist(optuna.trial.TrialState[uppercase(s)] for s in states)
     end
 
-    return pyconvert(Vector, study.study.get_trials(; deepcopy=copy_trials, states=py_states))
+    return [Trial{false}(t) for t in study.study.get_trials(; deepcopy=copy_trials, states=py_states)]
 end
