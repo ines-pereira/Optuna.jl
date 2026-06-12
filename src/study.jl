@@ -397,3 +397,46 @@ Return the objective value vectors for every Pareto-optimal trial.
 function best_values(study::Study)
     return [pyconvert(Vector{Float64}, t.values) for t in study.study.best_trials]
 end
+
+"""
+    enqueue_trial(
+        study::Study,
+        params::Dict{String,T} where T;
+        user_attrs::Union{Nothing,Dict{String,T} where T}=nothing,
+        skip_if_exists::Bool=false,
+        multithreading::Bool=Threads.nthreads() > 1,
+    )
+
+Enqueue a trial with fixed parameter values that will be evaluated before Optuna suggests new parameters.
+For further information see the [enqueue_trial](https://optuna.readthedocs.io/en/stable/reference/generated/optuna.study.Study.html#optuna.study.Study.enqueue_trial) in the Optuna python documentation.
+
+## Arguments
+- `study::Study`: The study to enqueue the trial in. (see [Study](@ref))
+- `params::Dict{String,T} where T`: Parameter name-value pairs to fix for this trial.
+
+## Keyword Arguments
+- `user_attrs::Union{Nothing,Dict{String,T} where T}=nothing`: Optional user attributes to attach to the trial.
+- `skip_if_exists::Bool=false`: If true, skip enqueueing when an identical waiting trial already exists.
+- `multithreading::Bool=Threads.nthreads() > 1`: Enable thread-safe execution (default: auto-detected).
+"""
+function enqueue_trial(
+    study::Study,
+    params::Dict{String, T};
+    user_attrs::Union{Nothing,Dict{String, T}}=nothing,
+    skip_if_exists::Bool=false,
+    multithreading::Bool=Threads.nthreads() > 1,
+) where T
+    py_params = pydict(params)
+    py_user_attrs = isnothing(user_attrs) ? nothing : pydict(user_attrs)
+    call = () -> study.study.enqueue_trial(
+        py_params;
+        user_attrs=py_user_attrs,
+        skip_if_exists=skip_if_exists,
+    )
+    if multithreading
+        thread_safe(call)
+    else
+        call()
+    end
+    nothing
+end
