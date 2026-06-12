@@ -62,6 +62,8 @@ export is_conda_pkg_installed, add_conda_pkg
 export get_all_study_names, create_sqlite_url, create_mysql_url, create_redis_url
 # trial.jl
 export suggest_int, suggest_float, suggest_categorical, report, should_prune
+export trial_number, trial_params, trial_relative_params
+export trial_user_attrs, trial_system_attrs, trial_distributions
 # study.jl
 export load_study, delete_study, copy_study
 export ask, tell

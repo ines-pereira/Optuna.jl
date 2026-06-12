@@ -239,3 +239,126 @@ function should_prune(trial::Trial{true})
         return Bool(trial.trial.should_prune())
     end
 end
+
+# Trial Attributes
+"""
+    trial_number(trial::Trial) -> Int
+
+Get the trial's number, which is consecutive and unique within a study.
+
+## Arguments
+- `trial::Trial`: The trial to query. (see [Trial](@ref))
+
+## Returns
+- `Int`: The trial number.
+"""
+function trial_number(trial::Trial{false})
+    return pyconvert(Int, trial.trial.number)
+end
+function trial_number(trial::Trial{true})
+    thread_safe() do
+        return pyconvert(Int, trial.trial.number)
+    end
+end
+
+"""
+    trial_params(trial::Trial) -> Dict{String,Any}
+
+Get the parameters that were sampled for this trial.
+
+## Arguments
+- `trial::Trial`: The trial to query. (see [Trial](@ref))
+
+## Returns
+- `Dict{String,Any}`: Parameter name-value pairs.
+"""
+function trial_params(trial::Trial{false})
+    return pyconvert(Dict{String,Any}, trial.trial.params)
+end
+function trial_params(trial::Trial{true})
+    thread_safe() do
+        return pyconvert(Dict{String,Any}, trial.trial.params)
+    end
+end
+
+"""
+    trial_relative_params(trial::Trial) -> Dict{String,Any}
+
+Get the parameters sampled relative to the sampler's search space for this trial.
+
+## Arguments
+- `trial::Trial`: The trial to query. (see [Trial](@ref))
+
+## Returns
+- `Dict{String,Any}`: Parameter name-value pairs sampled relative to the search space.
+"""
+function trial_relative_params(trial::Trial{false})
+    return pyconvert(Dict{String,Any}, trial.trial.relative_params)
+end
+function trial_relative_params(trial::Trial{true})
+    thread_safe() do
+        return pyconvert(Dict{String,Any}, trial.trial.relative_params)
+    end
+end
+
+"""
+    trial_user_attrs(trial::Trial) -> Dict{String,Any}
+
+Get the user attributes attached to this trial.
+
+## Arguments
+- `trial::Trial`: The trial to query. (see [Trial](@ref))
+
+## Returns
+- `Dict{String,Any}`: User attribute name-value pairs.
+"""
+function trial_user_attrs(trial::Trial{false})
+    return pyconvert(Dict{String,Any}, trial.trial.user_attrs)
+end
+function trial_user_attrs(trial::Trial{true})
+    thread_safe() do
+        return pyconvert(Dict{String,Any}, trial.trial.user_attrs)
+    end
+end
+
+"""
+    trial_system_attrs(trial::Trial) -> Dict{String,Any}
+
+Get the system attributes attached to this trial.
+
+## Arguments
+- `trial::Trial`: The trial to query. (see [Trial](@ref))
+
+## Returns
+- `Dict{String,Any}`: System attribute name-value pairs.
+"""
+function trial_system_attrs(trial::Trial{false})
+    return pyconvert(Dict{String,Any}, trial.trial.system_attrs)
+end
+function trial_system_attrs(trial::Trial{true})
+    thread_safe() do
+        return pyconvert(Dict{String,Any}, trial.trial.system_attrs)
+    end
+end
+
+"""
+    trial_distributions(trial::Trial) -> Dict{String,Any}
+
+Get the distributions used to sample each parameter for this trial.
+
+## Arguments
+- `trial::Trial`: The trial to query. (see [Trial](@ref))
+
+## Returns
+- `Dict{String,Any}`: Parameter name to distribution mapping. Each value is a Python
+  `BaseDistribution` object (e.g. `FloatDistribution`, `IntDistribution`,
+  `CategoricalDistribution`), accessible via PythonCall.
+"""
+function trial_distributions(trial::Trial{false})
+    return pyconvert(Dict{String,Any}, trial.trial.distributions)
+end
+function trial_distributions(trial::Trial{true})
+    thread_safe() do
+        return pyconvert(Dict{String,Any}, trial.trial.distributions)
+    end
+end
