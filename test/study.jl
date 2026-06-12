@@ -121,4 +121,52 @@
             @test_throws Exception best_value(study)
         end
     end
+
+    @testset "enqueue_trial" begin
+        create_test_study(; study_name="enqueue_test") do study, _
+            enqueue_trial(study, Dict("x" => 3.14))
+            trial = ask(study)
+            x = suggest_float(trial, "x", 0.0, 10.0)
+            @test x == 3.14
+        end
+
+        # skip_if_exists: enqueueing identical params twice should not duplicate
+        create_test_study(; study_name="enqueue_skip_test") do study, _
+            p = Dict{String,Any}("x" => 1.0)
+            enqueue_trial(study, p; skip_if_exists=true)
+            enqueue_trial(study, p; skip_if_exists=true)
+            @test length(get_trials(study; states=["waiting"])) == 1
+        end
+
+        # user_attrs round-trip
+        create_test_study(; study_name="enqueue_attrs_test") do study, _
+            enqueue_trial(
+                study,
+                Dict{String,Any}("x" => 2.0);
+                user_attrs=Dict{String,Any}("tag" => "smoke"),
+            )
+            trial = ask(study)
+            @test trial_user_attrs(trial)["tag"] == "smoke"
+        end
+    end
+
+    @testset "get_trials" begin
+        create_test_study(; study_name="get_trials_test") do study, _
+            for value in [5.0, 3.0, 7.0]
+                trial = ask(study)
+                suggest_float(trial, "x", 0.0, 10.0)
+                tell(study, trial, value)
+            end
+
+            all_trials = get_trials(study)
+            @test length(all_trials) == 3
+            @test all(t isa Trial for t in all_trials)
+            @test [trial_number(t) for t in all_trials] == [0, 1, 2]
+
+            @test length(get_trials(study; states=["complete"])) == 3
+            @test isempty(get_trials(study; states=["pruned"]))
+
+            @test_throws ArgumentError get_trials(study; states=["abcd"])
+        end
+    end
 end

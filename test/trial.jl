@@ -151,4 +151,44 @@
             tell(study, trial, 1.0)
         end
     end
+
+    @testset "trial attribute getters" begin
+        create_test_study(; study_name="trial_attrs_test") do study, _
+            trial = ask(study)
+            x = suggest_float(trial, "x", 0.0, 10.0)
+
+            @test trial_number(trial) == 0
+
+            params = trial_params(trial)
+            @test params isa Dict{String,Any}
+            @test params["x"] == x
+
+            @test trial_relative_params(trial) isa Dict{String,Any}
+
+            distributions = trial_distributions(trial)
+            @test distributions isa Dict{String,Any}
+            @test "x" in keys(distributions)
+
+            @test trial_system_attrs(trial) isa Dict{String,Any}
+
+            # set_user_attr has no Julia wrapper yet, call Python directly
+            trial.trial.set_user_attr("tag", "hello")
+            @test trial_user_attrs(trial)["tag"] == "hello"
+
+            trial2 = ask(study)
+            @test trial_number(trial2) == 1
+        end
+
+        create_test_study(; study_name="trial_attrs_mt_test") do study, _
+            trial = ask(study; multithreading=true)
+            suggest_float(trial, "x", 0.0, 10.0)
+
+            @test trial_number(trial) isa Int
+            @test trial_params(trial) isa Dict{String,Any}
+            @test trial_relative_params(trial) isa Dict{String,Any}
+            @test trial_user_attrs(trial) isa Dict{String,Any}
+            @test trial_system_attrs(trial) isa Dict{String,Any}
+            @test trial_distributions(trial) isa Dict{String,Any}
+        end
+    end
 end
