@@ -440,3 +440,43 @@ function enqueue_trial(
     end
     nothing
 end
+
+"""
+    get_trials(
+        study::Study;
+        copy_trials::Bool=true,
+        states::Union{Nothing,AbstractVector{<:AbstractString}}=nothing,
+    ) -> Vector
+
+Return all trials in the study, ordered by trial number.
+For further information see the [get_trials](https://optuna.readthedocs.io/en/stable/reference/generated/optuna.study.Study.html#optuna.study.Study.get_trials) in the Optuna python documentation.
+
+## Arguments
+- `study::Study`: The study to retrieve all trials from. (see [Study](@ref))
+
+## Keyword Arguments
+- `copy_trials::Bool=true`: Whether to copy each trial before returning. If set to `false`, any fields of the returned trials shouldn't be mutated.
+- `states::Union{Nothing,AbstractVector{<:AbstractString}}=nothing`: Trial states to filter on, e.g. `["complete", "pruned"]`. Valid values are `"running"`, `"waiting"`, `"complete"`, `"pruned"`, and `"fail"`. If `nothing`, trials of all states are included.
+
+## Returns
+- `Vector`: Trials of the study matching `states` (or all trials if `states` is `nothing`).
+"""
+function get_trials(
+    study::Study;
+    copy_trials::Bool=true,
+    states::Union{Nothing,AbstractVector{<:AbstractString}}=nothing,
+)
+    py_states = if isnothing(states)
+        nothing
+    else
+        invalid = filter(s -> uppercase(s) ∉ ("RUNNING", "WAITING", "COMPLETE", "PRUNED", "FAIL"), states)
+        isempty(invalid) || throw(
+            ArgumentError(
+                "Invalid trial state(s) $(invalid). Must be one of \"running\", \"waiting\", \"complete\", \"pruned\", and \"fail\".",
+            ),
+        )
+        pylist(optuna.trial.TrialState[uppercase(s)] for s in states)
+    end
+
+    return pyconvert(Vector, study.study.get_trials(; deepcopy=copy_trials, states=py_states))
+end
