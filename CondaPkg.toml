@@ -1,2 +1,6 @@
 [deps]
 optuna = ">=4,<5"
+
+[pip.deps]
+torch = ""
+scipy = ""
