@@ -362,3 +362,24 @@ function trial_distributions(trial::Trial{true})
         return pyconvert(Dict{String,Any}, trial.trial.distributions)
     end
 end
+
+"""
+    trial_values(trial::Trial) -> Vector{Float64}
+
+Get the objective values reported for this trial.
+
+## Arguments
+- `trial::Trial`: The trial to query. (see [Trial](@ref))
+
+## Returns
+- `Vector{Float64}`: Objective values in the order they were reported. Returns an empty
+  vector if the trial has not completed yet.
+"""
+function trial_values(trial::Trial{false})
+    return pyconvert(Vector{Float64}, trial.trial.values)
+end
+function trial_values(trial::Trial{true})
+    thread_safe() do
+        return pyconvert(Vector{Float64}, trial.trial.values)
+    end
+end
